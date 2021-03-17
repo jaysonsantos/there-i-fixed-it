@@ -1,0 +1,15 @@
+branch_name = "test"
+git_message = "chore: Changes"
+repositories = ["*"]
+deny_repositories = ["*-rs"]
+
+[provider]
+name = "test"
+
+[[files]]
+glob = "*"
+processors = [
+    { type = "regex", operations = [
+        { from = "(enabled\\W+=\\W+)True", to = "${1}False" }
+    ] }
+]
