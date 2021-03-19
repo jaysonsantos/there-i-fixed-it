@@ -60,6 +60,8 @@ impl PlanExecutor {
             .args(&["clone", &self.repository.ssh_url.as_str()])
             .arg(&self.directory)
             .stdin(Stdio::null())
+            .stderr(Stdio::piped())
+            .stdout(Stdio::piped())
             .spawn()?
             .wait_with_output()
             .await?;
@@ -104,6 +106,8 @@ impl PlanExecutor {
         let output = Command::new("git")
             .args(args)
             .stdin(Stdio::null())
+            .stderr(Stdio::piped())
+            .stdout(Stdio::piped())
             .current_dir(&self.directory)
             .spawn()?
             .wait_with_output()
@@ -310,6 +314,8 @@ mod tests {
             .arg("-s")
             .arg(&temp.path())
             .stdin(Stdio::piped())
+            .stderr(Stdio::piped())
+            .stdout(Stdio::piped())
             .spawn()
             .unwrap();
 
