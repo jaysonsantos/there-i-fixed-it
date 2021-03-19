@@ -166,7 +166,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_github() {
-        setup_error_handlers().unwrap();
+        setup_error_handlers().ok();
         let stub = start_stub_server().await;
         let provider = GithubProvider {
             user: "test-user".to_string(),
