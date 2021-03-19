@@ -23,6 +23,6 @@ jobs:
       - name: Clippy
         run: cargo clippy
       - name: Run tests
-        run: cargo test --verbose
+        run: RUST_BACKTRACE=full cargo test --verbose
       - name: Formattig
         run: cargo fmt -- --check
