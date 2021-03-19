@@ -278,6 +278,8 @@ mod tests {
     cd ..
     git clone destination.git setup
     cd setup
+    git config user.email test@test.com
+    git config user.name "Test User"
     echo "enabled = True" > file.py
     git add .
     git commit -m"Initial commit"
