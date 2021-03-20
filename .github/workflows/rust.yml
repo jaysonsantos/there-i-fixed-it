@@ -38,5 +38,3 @@ jobs:
           update-file: Cargo.toml
           changelog-file: CHANGELOG.md
           allow-initial-development-versions: true
-      - run: cargo publish --allow-dirty --token ${{ secrets.CARGO_TOKEN }}
-        if: steps.semrel.outputs.version != ''
