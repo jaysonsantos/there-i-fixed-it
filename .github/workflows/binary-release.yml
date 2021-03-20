@@ -1,0 +1,49 @@
+name: binary-release
+
+on:
+  push:
+    tags:
+      - "v.*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    env:
+      INSTALL_DIR: install_dir
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - id: tag
+        name: Prepare the ground
+        run: |
+          python --version
+          python .github/workflows/helpers.py output_tag ghr
+        env:
+          OS: ${{ matrix.os }}
+      - name: Build
+        shell: bash
+        run: |
+          rustup target add ${{ matrix.target }}
+          echo "Installing on ${INSTALL_DIR}"
+          cargo install --target ${{ matrix.target }} --root "${INSTALL_DIR}" --path .
+      - name: Publish
+        run: python .github/workflows/helpers.py bundle
+        env:
+          TARGET: ${{ matrix.target }}
+          OS: ${{ matrix.os }}
+          GHR_BINARY_PATH: ${{ steps.tag.outputs.GHR_BINARY_PATH }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

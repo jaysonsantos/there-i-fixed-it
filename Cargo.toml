@@ -4,8 +4,10 @@ version = "0.1.0"
 authors = ["Jayson Reis <santosdosreis@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/jaysonsantos/there-i-fixed-it"
+readme = "README.md"
+license = "MIT"
+description = "Automatic refactoring of repositories within an organization"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 async-trait = "0.1.48"
 camino = "1.0.3"
