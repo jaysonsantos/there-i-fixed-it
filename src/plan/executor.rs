@@ -295,7 +295,13 @@ mod tests {
         let temp = TempDir::new("fake-repository").unwrap();
         let setup = Utf8PathBuf::from("tests/create-test-repository.sh");
 
-        let command = Command::new("bash")
+        // TODO: Try to do better on windows
+        #[cfg(target_os = "windows")]
+        let bash_command = "C:\\Program Files\\Git\\bin\\bash.EXE";
+        #[cfg(not(target_os = "windows"))]
+        let bash_command = "bash";
+
+        let command = Command::new(bash_command)
             .arg("-x")
             .arg(&setup)
             .arg(&temp.path())
