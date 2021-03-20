@@ -1,9 +1,9 @@
 name: binary-release
 
 on:
-  push:
-    tags:
-      - "v.*"
+  release:
+    types:
+      - created
 
 env:
   CARGO_TERM_COLOR: always
