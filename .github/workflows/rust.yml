@@ -13,7 +13,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        os: [ "ubuntu-latest", "macos-latest", "windows-latest" ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -26,3 +26,17 @@ jobs:
         run: RUST_BACKTRACE=full cargo test --verbose
       - name: Formatting
         run: cargo fmt -- --check
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: go-semantic-release/action@v1
+        id: semrel
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          update-file: Cargo.toml
+          changelog-file: CHANGELOG.md
+          allow-initial-development-versions: true
+      - run: cargo publish --token ${{ secrets.CARGO_TOKEN }}
+        if: steps.semrel.outputs.version != ''
