@@ -3,3 +3,4 @@
 plan.toml
 repos/
 repos.json
+.semrel/
