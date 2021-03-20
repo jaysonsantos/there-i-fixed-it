@@ -182,20 +182,18 @@ impl PlanExecutor {
     #[instrument(skip(self, operation))]
     async fn process_file(&self, file: &Utf8Path, operation: &FileOperation) -> Result<bool> {
         trace!("fixing file");
-        let old_text = fs::read_to_string(file).await?;
-        // TODO: After https://github.com/rust-lang/rust/issues/65143
-        // is merged, would Cow<T>.is_owned() enough to find out if the file changed?
-        let mut new_text = old_text.clone();
+        let mut text = fs::read_to_string(file).await?;
+        let mut changed = false;
+
         for processor in &operation.processors {
-            // TODO: Find a way to make this CoW
-            new_text = processor.process(&new_text).to_string();
+            changed |= processor.process(&mut text);
         }
 
-        if old_text == new_text {
-            return Ok(false);
+        if !changed {
+            return Ok(changed);
         }
 
-        fs::write(file, &new_text).await?;
+        fs::write(file, &text).await?;
 
         trace!("done");
         Ok(true)

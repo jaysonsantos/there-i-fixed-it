@@ -1,6 +1,8 @@
 pub mod executor;
 pub mod glob_pattern;
 
+use std::borrow::Cow;
+
 use camino::Utf8Path;
 use color_eyre::{eyre::Context, Result};
 use regex::Regex;
@@ -103,15 +105,17 @@ impl Plan {
 }
 
 impl Processor {
-    pub fn process(&self, text: &str) -> String {
-        // TODO: Find a way to make this CoW
-        let mut text = text.to_string();
+    pub fn process(&self, text: &mut String) -> bool {
+        let mut changed = false;
         match self {
             Processor::Regex(processor) => {
                 for operation in &processor.operations {
-                    text = operation.from.replace_all(&text, &operation.to).to_string()
+                    if let Cow::Owned(new_text) = operation.from.replace_all(&text, &operation.to) {
+                        *text = new_text;
+                        changed = true;
+                    }
                 }
-                text
+                changed
             }
         }
     }
