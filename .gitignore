@@ -5,3 +5,4 @@ repos/
 repos.json
 .semrel/
 .secrets
+.cache/
