@@ -70,14 +70,15 @@ impl PlanExecutor {
         Ok(())
     }
 
-    #[instrument(skip(self))]
+    #[instrument(skip(self), fields(directory = self.directory.as_str()))]
     async fn ensure_branch(&self) -> Result<()> {
-        let output = self
-            .git_output(&["branch", "--show-current"])
+        // git branch --show-current is only on git 2.22+
+        let current_branch = self
+            .git_output(&["rev-parse", "--abbrev-ref", "HEAD"])
             .await
             .wrap_err("failed to list branch")?;
-        let output = output.trim();
-        if output == self.plan.branch_name {
+        let current_branch = current_branch.trim();
+        if current_branch == self.plan.branch_name {
             debug!("branch already checked out");
             return Ok(());
         }
@@ -266,30 +267,12 @@ mod tests {
 
     use camino::{Utf8Path, Utf8PathBuf};
     use tempdir::TempDir;
-    use tokio::{io::AsyncWriteExt, process::Command};
+    use tokio::process::Command;
 
     use crate::{plan::plan_from_file, Repository};
 
     use super::PlanExecutor;
     use crate::plan::executor::check_process;
-
-    const CREATE_REPOSITORY_SCRIPT: &str = r#"
-    set -ex
-    cd $1
-    mkdir destination.git
-    cd destination.git
-    git init -b main --bare
-    cd ..
-    git clone destination.git setup
-    cd setup
-    git config user.email test@test.com
-    git config user.name "Test User"
-    git checkout -b main || true
-    echo "enabled = True" > file.py
-    git add .
-    git commit -m"Initial commit"
-    git push -u origin main
-    "#;
 
     #[tokio::test]
     async fn test_executor_flow() {
@@ -310,23 +293,17 @@ mod tests {
 
     async fn create_fake_repository(repository: Repository) -> (Repository, TempDir) {
         let temp = TempDir::new("fake-repository").unwrap();
+        let setup = Utf8PathBuf::from("tests/create-test-repository.sh");
 
-        let mut command = Command::new("sh")
-            .arg("-s")
+        let command = Command::new("bash")
+            .arg("-x")
+            .arg(&setup)
             .arg(&temp.path())
-            .stdin(Stdio::piped())
+            .stdin(Stdio::null())
             .stderr(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()
             .unwrap();
-
-        let mut stdin = command.stdin.take().unwrap();
-        stdin
-            .write_all(CREATE_REPOSITORY_SCRIPT.as_bytes())
-            .await
-            .unwrap();
-
-        drop(stdin);
 
         let output = command.wait_with_output().await.unwrap();
         check_process(&output).unwrap();
