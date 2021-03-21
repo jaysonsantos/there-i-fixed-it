@@ -1,0 +1,14 @@
+{
+  "request": {
+    "urlPathPattern": "/github/repos/(?<organization>[\\w_-]+)/(?<repository>[\\w_-]+)/pulls",
+    "method": "GET",
+    "queryParameters": {
+      "state": {
+        "equalTo": "open"
+      }
+    }
+  },
+  "response": {
+    "body": "[{{#eq request.query.head.first 'fix-it:valid-branch'}}{}{{/eq}}]"
+  }
+}

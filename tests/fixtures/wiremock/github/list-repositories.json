@@ -1,0 +1,30 @@
+{
+  "request": {
+    "urlPath": "/github/orgs/fix-it/repos",
+    "queryParameters": {
+      "type": {
+        "equalTo": "private"
+      },
+      "page": {
+        "matches": "[1-2]"
+      }
+    },
+    "method": "GET"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": [
+      {
+        "name": "fix-it-{{request.query.page}}",
+        "private": true,
+        "fork": false,
+        "ssh_url": "",
+        "default_branch": "main"
+      }
+    ],
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "Link": "{{#eq '1' request.query.page.first}}<{{request.baseUrl}}{{request.path}}?type=private&per_page=100&page=2>; rel=\"next\", {{/eq}}<{{request.baseUrl}}{{ request.path }}?type=private&per_page=100&page=2>; rel=\"last\""
+    }
+  }
+}
