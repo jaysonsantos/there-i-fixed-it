@@ -1,5 +1,7 @@
 # There, I fixed it!
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jaysonsantos/there-i-fixed-it/main.svg)](https://results.pre-commit.ci/badge/github/jaysonsantos/there-i-fixed-it/main.svg)
+
 This is a tool to automate repetitive tasks on repositories of an organization.
 
 ## What it does
