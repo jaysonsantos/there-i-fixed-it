@@ -1240,8 +1240,11 @@ dependencies = [
 name = "stub-server"
 version = "0.1.0"
 dependencies = [
+ "color-eyre",
  "lazy_static",
  "reqwest",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

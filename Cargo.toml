@@ -30,3 +30,6 @@ tracing-subscriber = { version = "0.2.17", features = ["fmt"] }
 [dev-dependencies]
 stub-server = { path = "tests/stub-server" }
 tempdir = "0.3.7"
+
+[features]
+docker = []
