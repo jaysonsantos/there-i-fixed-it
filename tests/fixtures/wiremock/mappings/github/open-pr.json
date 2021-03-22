@@ -1,0 +1,21 @@
+{
+  "request": {
+    "urlPathPattern": "/github/repos/(?<organization>[\\w_-]+)/(?<repository>[\\w_-]+)/pulls",
+    "method": "POST",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "head": "head",
+          "base": "base",
+          "title": "title",
+          "body": "body"
+        }
+      }
+    ]
+  },
+  "response": {
+    "jsonBody": {
+      "url": "http://localhost/your-pr"
+    }
+  }
+}

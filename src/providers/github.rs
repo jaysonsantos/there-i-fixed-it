@@ -1,5 +1,7 @@
 use async_trait::async_trait;
 use color_eyre::{eyre::Context, Result};
+use lazy_static::lazy_static;
+use regex::Regex;
 use reqwest::{
     header::{HeaderMap, ACCEPT, CONTENT_TYPE, USER_AGENT},
     Client, ClientBuilder, Method, RequestBuilder,
@@ -100,10 +102,14 @@ impl Provider for GithubProvider {
         }
         trace!("fetching repositories");
         let mut output = vec![];
-        let mut page = 1;
-        while let Some(repositories) = self.list_repositories_per_page(page).await? {
+        let mut next_page_url = Some(format!(
+            "{}/orgs/{}/repos?type=private&per_page=100&page=1",
+            self.api_url, self.organization
+        ));
+        while let Some(url) = next_page_url.as_ref() {
+            let (repositories, next_page) = self.list_repositories_per_page(&url).await?;
             output.extend(repositories);
-            page += 1;
+            next_page_url = next_page
         }
         save_to_cache("github", &self.organization, &output).await?;
         Ok(output)
@@ -112,26 +118,25 @@ impl Provider for GithubProvider {
 
 impl GithubProvider {
     #[instrument(skip(self))]
-    async fn list_repositories_per_page(&self, page: usize) -> Result<Option<Vec<Repository>>> {
-        let url = format!("{}/orgs/{}/repos", self.api_url, self.organization);
+    async fn list_repositories_per_page(
+        &self,
+        url: &str,
+    ) -> Result<(Vec<Repository>, Option<String>)> {
         debug!("Fetching repositories on {}", &url);
-        let response = self
-            .request(Method::GET, &url)?
-            .query(&[
-                ("type", "private"),
-                ("per_page", "100"),
-                ("page", &format!("{}", page)),
-            ])
-            .send()
-            .await?;
+        let response = self.request(Method::GET, &url)?.send().await?;
 
         let response = check_api_errors(response).await?;
+        let link_header = response
+            .headers()
+            .get("link")
+            .expect("github always send link")
+            .to_str()
+            .unwrap();
+        let next_page = get_next_url(link_header).map(|p| p.to_string());
 
         let repositories: Vec<Repository> = response.json().await?;
-        if repositories.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(repositories))
+
+        Ok((repositories, next_page))
     }
 
     fn request(&self, method: Method, url: &str) -> Result<RequestBuilder> {
@@ -156,23 +161,34 @@ fn default_url() -> String {
     "https://api.github.com".to_owned()
 }
 
+fn get_next_url(link_header: &str) -> Option<&str> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r#"<(.+?)>; rel="next""#).unwrap();
+    }
+    RE.captures(link_header)
+        .map(|c| c.get(1))
+        .flatten()
+        .map(|m| m.as_str())
+}
+
 #[cfg(test)]
 mod tests {
-    use stub_server::start_stub_server;
+    use stub_server::start_wiremock;
 
     use crate::{providers::Provider, setup_error_handlers};
 
-    use super::GithubProvider;
+    use super::{get_next_url, GithubProvider};
 
+    #[cfg(docker)]
     #[tokio::test]
     async fn test_github() {
         setup_error_handlers().ok();
-        let stub = start_stub_server().await;
+        let base_url = start_wiremock().await.unwrap();
         let provider = GithubProvider {
             user: "test-user".to_string(),
             token: "bebacafe".to_string(),
             organization: "fix-it".to_string(),
-            api_url: format!("{}/github", stub.url),
+            api_url: format!("{}/github", base_url),
         };
 
         let repositories = provider.list_repositories(false).await.unwrap();
@@ -180,16 +196,28 @@ mod tests {
         let repository = &repositories[0];
         assert_eq!(repository.name, "fix-it-1");
         assert!(provider
-            .is_pr_open("repo", "valid-branch")
+            .is_pr_open("fix-it-1", "valid-branch")
             .await
             .expect("failed to check if a pr for valid branch is open"));
         assert!(!provider
-            .is_pr_open("repo", "invalid-branch")
+            .is_pr_open("fix-it-1", "invalid-branch")
             .await
             .expect("failed to check if a pr for invalid branch is not open"));
         provider
-            .open_pr("repo", "base", "head", "title", Some("body"))
+            .open_pr("fix-it-2", "base", "head", "title", Some("body"))
             .await
             .expect("failed to open pr");
+    }
+
+    #[test]
+    fn test_next_url() {
+        let with_next = r#"</repos?type=private&per_page=100&page=2>; rel="next", </repos?type=private&per_page=100&page=1>; rel="first""#;
+        let without_next = r#"</repos?type=private&per_page=100&page=1>; rel="first""#;
+        assert_eq!(
+            get_next_url(with_next),
+            Some(r#"/repos?type=private&per_page=100&page=2"#)
+        );
+        assert_eq!(get_next_url(without_next), None);
+        assert_eq!(get_next_url(""), None);
     }
 }
