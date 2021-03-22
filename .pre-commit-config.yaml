@@ -21,3 +21,9 @@ repos:
     hooks:
       - id: prettier
         stages: [commit]
+  - repo: https://github.com/commitizen-tools/commitizen
+    hooks:
+    - id: commitizen
+      stages:
+      - commit-msg
+    rev: v2.16.0
