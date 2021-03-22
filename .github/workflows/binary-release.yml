@@ -3,7 +3,7 @@ name: binary-release
 on:
   release:
     types:
-      - created
+      - published
 
 env:
   CARGO_TERM_COLOR: always
