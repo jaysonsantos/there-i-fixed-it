@@ -36,7 +36,7 @@ jobs:
         # After commitizen can bump Cargo.lock files, rever this to their own implementation
         uses: jaysonsantos/commitizen-action@custom-commitizen-install
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PERSONAL_TOKEN }}
           branch: main
           changelog_increment_filename: body.md
           custom_commitzen_install: "https://github.com/jaysonsantos/commitizen/archive/refs/heads/version-in-random-position.zip#egg=commitizen"
@@ -46,5 +46,4 @@ jobs:
           body_path: "body.md"
           tag_name: ${{ env.REVISION }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
