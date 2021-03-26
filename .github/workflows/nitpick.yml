@@ -1,0 +1,19 @@
+name: Nitpick
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#adding-a-system-path
+      - run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      # Nitpick can't perform HTTP requests on pre-commit.ci; see https://github.com/pre-commit-ci/issues/issues/47
+      - uses: pre-commit/action@v2.0.0 # https://github.com/pre-commit/action
+        with:
+          extra_args: nitpick-run --all-files

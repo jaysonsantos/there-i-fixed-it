@@ -4,13 +4,9 @@ repos:
   - repo: https://github.com/andreoliwa/nitpick
     # TODO: pin to a tag when a new nitpick version is released
     # https://github.com/andreoliwa/nitpick/commit/5e98e5fcda32d1fe40939bf3abd4e6e5da00e9ba
-    rev: 5e98e5fcda32d1fe40939bf3abd4e6e5da00e9ba
+    rev: ed4c4adf0450d90855b75d6a1d63e8f370faf983
     hooks:
       - id: nitpick-run
-        # To display verbose logs on nitpick run here:
-        # https://results.pre-commit.ci/repo/github/348830961
-        # TODO: remove this flag once the connection error is solved
-        args: ["--verbose"]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.4.0
     hooks:
@@ -27,3 +23,7 @@ repos:
         stages:
           - commit-msg
     rev: v2.16.0
+
+# https://pre-commit.ci/#configuration
+ci:
+  skip: [nitpick-run]
